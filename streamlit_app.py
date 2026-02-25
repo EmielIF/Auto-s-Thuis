@@ -30,10 +30,18 @@ try:
     reizigers, vroege_vogels = [], []
     
     for n in df["Naam"].tolist():
-        k = st.radio(f"Status **{n}**:", ["🏠 Thuis", "🚗 Weg (na 07:30)", "🌅 Weg (voor 07:30)"], horizontal=True, key=f"s_{n}")
+        # Aangepaste volgorde van opties
+        k = st.radio(
+            f"Status **{n}**:", 
+            ["🌅 Weg (voor 07:30)", "🚗 Weg (na 07:30)", "🏠 Ik blijf thuis"], 
+            horizontal=True, 
+            key=f"s_{n}"
+        )
         if "Weg" in k:
             reizigers.append(n)
-            if "< 07:30" in k: vroege_vogels.append(n)
+            # Check of het een vroege vogel is
+            if "voor 07:30" in k: 
+                vroege_vogels.append(n)
 
     st.divider()
     msg = "🌧️ Regen: 2 pnt" if weer_bonus else "☀️ Droog: 1 pnt"
@@ -48,14 +56,14 @@ try:
             
             k_df = df[df["Naam"].isin(kand)]
             min_p = k_df["Punten"].min()
-            sjaak = random.choice(k_df[k_df["Punten"] == min_p]["Naam"].tolist())
+            sjaak_naam = random.choice(k_df[k_df["Punten"] == min_p]["Naam"].tolist())
             p = 2 if weer_bonus else 1
             
             with st.spinner('Bezig...'):
-                res = requests.get(f"{conf['script_url']}?naam={sjaak}&punten={p}")
+                res = requests.get(f"{conf['script_url']}?naam={sjaak_naam}&punten={p}")
                 
             if res.status_code == 200:
-                st.session_state.sjaak, st.session_state.p = sjaak, p
+                st.session_state.sjaak, st.session_state.p = sjaak_naam, p
                 st.balloons()
                 st.rerun()
             else:
@@ -63,6 +71,7 @@ try:
 
     if 'sjaak' in st.session_state:
         st.error(f"❌ **{st.session_state.sjaak}** parkeert ver weg! (+{st.session_state.p} pnt)")
+        st.info("⚠️ Vergeet niet de auto van de vorige sjaak op te halen!")
 
 except Exception as e:
     st.error(f"Fout: {e}")
