@@ -10,40 +10,59 @@ st.title("🚗 Slimme Parkeer-Planner")
 def check_slecht_weer():
     try:
         url = "https://api.open-meteo.com/v1/forecast?latitude=52.0783&longitude=5.4883&current=precipitation&timezone=Europe%2FAmsterdam"
-        response = requests.get(url).json()
-        return response['current']['precipitation'] > 0
+        r = requests.get(url).json()
+        return r['current']['precipitation'] > 0
     except:
         return False
 
-is_het_slecht_weer = check_slecht_weer()
+weer_bonus = check_slecht_weer()
 
 # --- DATA OPHALEN ---
-sheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-script_url = st.secrets["connections"]["gsheets"]["script_url"]
-csv_url = sheet_url.replace("/edit?usp=sharing", "/export?format=csv").replace("/edit#gid=0", "/export?format=csv")
+conf = st.secrets["connections"]["gsheets"]
+csv_url = conf["spreadsheet"].replace("/edit?usp=sharing", "/export?format=csv").replace("/edit#gid=0", "/export?format=csv")
 
 try:
     df = pd.read_csv(csv_url)
-    st.subheader("📊 Huidige Stand")
+    st.subheader("📊 Stand")
     st.dataframe(df, use_container_width=True, hide_index=True)
 
-    st.subheader("📋 Wie gaat wanneer weg?")
-    reizigers = []
-    vroege_vogels = []
+    st.subheader("📋 Planning")
+    reizigers, vroege_vogels = [], []
     
-    for naam in df["Naam"].tolist():
-        keuze = st.radio(
-            f"Status voor **{naam}**:",
-            ["🏠 Thuis", "🚗 Weg (> 07:30)", "🌅 Weg (< 07:30)"],
-            horizontal=True,
-            key=f"status_{naam}"
-        )
-        if "Weg" in keuze:
-            reizigers.append(naam)
-            if "< 07:30" in keuze:
-                vroege_vogels.append(naam)
+    for n in df["Naam"].tolist():
+        k = st.radio(f"Status **{n}**:", ["🏠 Thuis", "🚗 Weg (> 07:30)", "🌅 Weg (< 07:30)"], horizontal=True, key=f"s_{n}")
+        if "Weg" in k:
+            reizigers.append(n)
+            if "< 07:30" in k: vroege_vogels.append(n)
 
     st.divider()
+    msg = "🌧️ Regen: 2 pnt" if weer_bonus else "☀️ Droog: 1 pnt"
+    st.info(msg)
 
-    if is_het_slecht_weer:
-        st.warning("🌧️ Weer:
+    if st.button("⚖️ Bereken & Update"):
+        if not reizigers:
+            st.warning("Niemand weg!")
+        else:
+            kand = [n for n in reizigers if n not in vroege_vogels]
+            if not kand: kand = reizigers
+            
+            k_df = df[df["Naam"].isin(kand)]
+            min_p = k_df["Punten"].min()
+            sjaak = random.choice(k_df[k_df["Punten"] == min_p]["Naam"].tolist())
+            p = 2 if weer_bonus else 1
+            
+            with st.spinner('Bezig...'):
+                res = requests.get(f"{conf['script_url']}?naam={sjaak}&punten={p}")
+                
+            if res.status_code == 200:
+                st.session_state.sjaak, st.session_state.p = sjaak, p
+                st.balloons()
+                st.rerun()
+            else:
+                st.error("Sheet update mislukt.")
+
+    if 'sjaak' in st.session_state:
+        st.error(f"❌ **{st.session_state.sjaak}** parkeert ver weg! (+{st.session_state.p} pnt)")
+
+except Exception as e:
+    st.error(f"Fout: {e}")
