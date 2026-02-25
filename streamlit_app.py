@@ -60,7 +60,7 @@ try:
 
     with col2:
         # Vrijwillige wissel optie
-        vrijwilliger = st.selectbox("Vrijwillige wissel?", ["Kies naam..."] + df["Naam"].tolist())
+        vrijwilliger = st.selectbox("Vrijwillig ver weg staan?", ["Kies naam..."] + df["Naam"].tolist())
         if vrijwilliger != "Kies naam...":
             if st.button(f"Bevestig {vrijwilliger}", use_container_width=True):
                 with st.spinner('Verwerken...'):
