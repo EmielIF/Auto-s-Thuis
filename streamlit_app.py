@@ -50,11 +50,9 @@ try:
             st.warning("Niemand gaat weg? Dan hoeft er ook niemand te verplaatsen!")
         else:
             if not kandidaten:
-                # Als iedereen die weg gaat een vroege vogel is, loot dan uit alle reizigers
-                st.info("Iedereen die weg gaat is een vroege vogel. We loten uit de reizigers.")
+                st.info("Iedereen die weg gaat is een vroege vogel of niemand is kandidaat. We loten uit de reizigers.")
                 sjaak = random.choice(reizigers)
             else:
-                # Kies de persoon met de minste punten uit de kandidaten
                 kandidaat_df = df[df["Naam"].isin(kandidaten)]
                 min_pnt = kandidaat_df["Punten"].min()
                 potentiële_sjaaks = kandidaat_df[kandidaat_df["Punten"] == min_pnt]["Naam"].tolist()
@@ -62,15 +60,24 @@ try:
 
             pnt_erbij = 2 if is_het_slecht_weer else 1
             
-            with st.spinner('Bezig met updaten...'):
+            with st.spinner('Update versturen naar Google Sheets...'):
                 response = requests.get(f"{script_url}?naam={sjaak}&punten={pnt_erbij}")
                 
             if response.status_code == 200:
-                st.error(f"❌ **{sjaak}** moet ver weg parkeren bij thuiskomst!")
-                st.success(f"De punten zijn bijgewerkt in de Sheet.")
+                # Sla de uitslag op in een tijdelijke 'session state' om het te tonen na de rerun
+                st.session_state.laatste_sjaak = sjaak
+                st.session_state.laatste_punten = pnt_erbij
+                
+                # Geef een melding en ververs de boel
+                st.success(f"De punten zijn bijgewerkt voor {sjaak}!")
                 st.balloons()
+                
+                # Dit is de magie: herstart het script om de tabel te vernieuwen
+                st.rerun()
             else:
-                st.error("Update mislukt. Controleer de script_url.")
+                st.error("Update mislukt. Controleer je Google Script URL.")
 
-except Exception as e:
-    st.error(f"Fout: {e}")
+# Toon de uitslag van de laatste berekening bovenaan of onderaan als die er is
+if 'laatste_sjaak' in st.session_state:
+    st.divider()
+    st.error(f"❌ **{st.session_state.laatste_sjaak}** moet ver weg parkeren! (+{st.session_state.laatste_punten} pnt)")
