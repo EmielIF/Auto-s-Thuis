@@ -34,7 +34,7 @@ try:
         if "Weg" in k:
             reizigers.append(n)
             if "voor 07:30" in k: vroege_vogels.append(n)
-##
+
     st.divider()
     p_beurt = 2 if weer_bonus else 1
     
@@ -43,7 +43,7 @@ try:
     
     weer_tekst = "🌧️ Regen" if weer_bonus else "☀️ Droog"
     st.info(f"{weer_tekst}: deze beurt is {p_beurt} {woord}.")
-##
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -62,20 +62,19 @@ try:
                 if res.status_code == 200:
                     st.session_state.sjaak, st.session_state.p = sjaak, p_beurt
                     st.rerun()
-##
+
     with col2:
         # Tekstuele aanpassing om 'misbruik' te ontmoedigen
         vrijwilliger = st.selectbox("Nu de auto verplaatsen?", ["Kies naam..."] + df["Naam"].tolist())
         if vrijwilliger != "Kies naam...":
-            st.caption("Alleen gebruiken als de auto van de oprit naar de straat gaat.")
-            if st.button(f"Bevestig verplaatsing {vrijwilliger}", use_container_width=True):
+                     if st.button(f"Bevestig verplaatsing {vrijwilliger}", use_container_width=True):
                 with st.spinner('Verwerken...'):
                     # 0.5 punt is een mooie tussenweg
                     res = requests.get(f"{conf['script_url']}?naam={vrijwilliger}&punten=0.5")
                 if res.status_code == 200:
                     st.success(f"Top! {vrijwilliger} krijgt 0.5 punt voor de moeite.")
                     st.rerun()
-##
+
     if 'sjaak' in st.session_state:
         st.error(f"❌ **{st.session_state.sjaak}** parkeert ver weg! (+{st.session_state.p} pnt)")
 
