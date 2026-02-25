@@ -62,18 +62,20 @@ try:
                 if res.status_code == 200:
                     st.session_state.sjaak, st.session_state.p = sjaak, p_beurt
                     st.rerun()
-
+##
     with col2:
-        # Vrijwillige wissel optie
-        vrijwilliger = st.selectbox("Vrijwillig ver weg staan?", ["Kies naam..."] + df["Naam"].tolist())
+        # Tekstuele aanpassing om 'misbruik' te ontmoedigen
+        vrijwilliger = st.selectbox("Nu de auto verplaatsen?", ["Kies naam..."] + df["Naam"].tolist())
         if vrijwilliger != "Kies naam...":
-            if st.button(f"Bevestig {vrijwilliger}", use_container_width=True):
+            st.caption("Alleen gebruiken als de auto van de oprit naar de straat gaat.")
+            if st.button(f"Bevestig verplaatsing {vrijwilliger}", use_container_width=True):
                 with st.spinner('Verwerken...'):
+                    # 0.5 punt is een mooie tussenweg
                     res = requests.get(f"{conf['script_url']}?naam={vrijwilliger}&punten=0.5")
                 if res.status_code == 200:
-                    st.success(f"{vrijwilliger} heeft de auto verplaatst en spaart een halve punt!")
+                    st.success(f"Top! {vrijwilliger} krijgt 0.5 punt voor de moeite.")
                     st.rerun()
-
+##
     if 'sjaak' in st.session_state:
         st.error(f"❌ **{st.session_state.sjaak}** parkeert ver weg! (+{st.session_state.p} pnt)")
 
