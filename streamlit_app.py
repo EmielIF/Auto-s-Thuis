@@ -67,7 +67,8 @@ try:
         # Tekstuele aanpassing om 'misbruik' te ontmoedigen
         vrijwilliger = st.selectbox("Nu de auto verplaatsen?", ["Kies naam..."] + df["Naam"].tolist())
         if vrijwilliger != "Kies naam...":
-                     if st.button(f"Bevestig verplaatsing {vrijwilliger}", use_container_width=True):
+            st.caption("Alleen gebruiken als de auto van de oprit naar de straat gaat.")
+            if st.button(f"Bevestig verplaatsing {vrijwilliger}", use_container_width=True):
                 with st.spinner('Verwerken...'):
                     # 0.5 punt is een mooie tussenweg
                     res = requests.get(f"{conf['script_url']}?naam={vrijwilliger}&punten=0.5")
