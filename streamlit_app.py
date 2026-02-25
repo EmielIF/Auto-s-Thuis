@@ -3,10 +3,10 @@ import pandas as pd
 import random
 import requests
 
-# Verander de page_icon naar een emoji of een link naar een plaatje
+# We gebruiken een link naar een echt plaatje (PNG) in plaats van een emoji
 st.set_page_config(
     page_title="Parkeer-Planner", 
-    page_icon="🅿️"  # Hier kun je een emoji van een parkeerplaats neerzetten
+    page_icon="https://www.iconpacks.net/icons/2/free-parking-sign-icon-1641-thumb.png"
 )
 
 st.set_page_config(page_title="Parkeer-Planner", page_icon="🚗")
