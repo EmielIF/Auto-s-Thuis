@@ -1,51 +1,51 @@
 import streamlit as st
 import pandas as pd
 import random
+import requests
 
-# Pagina instellingen
 st.set_page_config(page_title="Parkeer-Planner", page_icon="🚗")
-st.title("🚗 Wie staat er ver weg?")
+st.title("🚗 Automatische Parkeer-Planner")
 
-# 1. Haal de URL uit de Secrets
-# We bouwen de URL om naar een directe CSV-export link
+# 1. URLs ophalen uit Secrets
 sheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-csv_url = sheet_url.replace("/edit?usp=sharing", "/export?format=csv")
-csv_url = csv_url.replace("/edit#gid=0", "/export?format=csv")
+# Zorg dat je deze nieuwe regel toevoegt aan je Secrets (zie stap 3)
+script_url = st.secrets["connections"]["gsheets"]["script_url"]
 
-# 2. Lees de data in
+csv_url = sheet_url.replace("/edit?usp=sharing", "/export?format=csv").replace("/edit#gid=0", "/export?format=csv")
+
 try:
+    # Lees de huidige stand
     df = pd.read_csv(csv_url)
-    
-    st.subheader("📊 De Tussenstand")
+    st.subheader("📊 Huidige Stand")
     st.table(df)
 
-    # Input van de gebruikers
     vroege_vogels = st.multiselect("Wie moet er morgen vóór 08:30 weg?", df["Naam"].tolist())
     slecht_weer = st.toggle("Het regent of is erg koud (2 punten)")
 
-    if st.button("⚖️ Bereken Parkeerplek"):
+    if st.button("⚖️ Bereken & Update"):
         kandidaten = [n for n in df["Naam"].tolist() if n not in vroege_vogels]
         
         if not kandidaten:
-            st.warning("Iedereen moet vroeg weg! We kiezen willekeurig.")
             sjaak = random.choice(df["Naam"].tolist())
         else:
-            # Filter de kandidaten en zoek de laagste score
-            kandidaat_df = df[df["Naam"].isin(kandidaten)]
-            min_pnt = kandidaat_df["Punten"].min()
-            potentiële_sjaaks = kandidaat_df[kandidaat_df["Punten"] == min_pnt]["Naam"].tolist()
+            min_pnt = df[df["Naam"].isin(kandidaten)]["Punten"].min()
+            potentiële_sjaaks = df[(df["Naam"].isin(kandidaten)) & (df["Punten"] == min_pnt)]["Naam"].tolist()
             sjaak = random.choice(potentiële_sjaaks)
 
-        # Punten toekennen
         pnt_erbij = 2 if slecht_weer else 1
         
-        st.error(f"❌ **{sjaak}** moet ver weg staan!")
-        st.info(f"Open de Google Sheet om {pnt_erbij} punt(en) bij de score van {sjaak} op te tellen.")
-        st.balloons()
-        
-        # Link naar de sheet zodat je het makkelijk handmatig kunt doen
-        st.markdown(f"[Klik hier om de score in de Google Sheet aan te passen]({sheet_url})")
+        # --- DIT IS DE AUTOMATISCHE UPDATE ---
+        with st.spinner('Punten worden bijgeschreven in Google Sheets...'):
+            response = requests.get(f"{script_url}?naam={sjaak}&punten={pnt_erbij}")
+            
+        if response.status_code == 200:
+            st.error(f"❌ **{sjaak}** staat vandaag ver weg!")
+            st.success(f"De Google Sheet is automatisch bijgewerkt (+{pnt_erbij} pnt).")
+            st.balloons()
+            # Pagina even refreshen om de nieuwe tabel te zien
+            st.button("Tabel vernieuwen")
+        else:
+            st.warning("De berekening is gelukt, maar de automatische update mislukte.")
 
 except Exception as e:
-    st.error("Er gaat iets mis bij het ophalen van de Sheet.")
-    st.write(f"Foutmelding: {e}")
+    st.error(f"Fout bij het laden: {e}")
