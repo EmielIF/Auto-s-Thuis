@@ -20,9 +20,28 @@ weer_bonus = check_slecht_weer()
 # --- DATA OPHALEN ---
 conf = st.secrets["connections"]["gsheets"]
 csv_url = conf["spreadsheet"].replace("/edit?usp=sharing", "/export?format=csv").replace("/edit#gid=0", "/export?format=csv")
-
+##
 try:
-    df = pd.read_csv(csv_url)
+    # We voegen 'decimal=","' toe zodat Python begrijpt dat 0,5 een getal is
+    df = pd.read_csv(csv_url, decimal=",")
+    
+    # Voor de zekerheid dwingen we de kolom 'Punten' naar getallen (floats)
+    df["Punten"] = pd.to_numeric(df["Punten"], errors='coerce').fillna(0)
+
+    st.subheader("📊 Relatieve Stand")
+    st.dataframe(
+        df, 
+        use_container_width=True, 
+        hide_index=True,
+        column_config={
+            "Punten": st.column_config.NumberColumn(
+                "Punten",
+                format="%.1f", # Toon altijd 1 cijfer achter de komma
+            )
+        }
+    )
+
+##
     st.subheader("📊 Relatieve Stand")
     # We dwingen hier de kolom 'Punten' om als getal met 1 decimaal getoond te worden
     st.dataframe(
