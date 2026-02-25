@@ -34,11 +34,16 @@ try:
         if "Weg" in k:
             reizigers.append(n)
             if "voor 07:30" in k: vroege_vogels.append(n)
-
+##
     st.divider()
     p_beurt = 2 if weer_bonus else 1
-    st.info(f"{'🌧️ Regen' if weer_bonus else '☀️ Droog'}: deze beurt is {p_beurt} punt(en).")
-
+    
+    # Check voor enkelvoud of meervoud
+    woord = "punten" if p_beurt > 1 else "punt"
+    
+    weer_tekst = "🌧️ Regen" if weer_bonus else "☀️ Droog"
+    st.info(f"{weer_tekst}: deze beurt is {p_beurt} {woord}.")
+##
     col1, col2 = st.columns(2)
 
     with col1:
