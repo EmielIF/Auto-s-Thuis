@@ -23,54 +23,55 @@ csv_url = conf["spreadsheet"].replace("/edit?usp=sharing", "/export?format=csv")
 
 try:
     df = pd.read_csv(csv_url)
-    st.subheader("📊 Stand")
+    st.subheader("📊 Relatieve Stand")
     st.dataframe(df, use_container_width=True, hide_index=True)
 
     st.subheader("📋 Planning morgen")
     reizigers, vroege_vogels = [], []
     
     for n in df["Naam"].tolist():
-        # Aangepaste volgorde van opties
-        k = st.radio(
-            f"Status **{n}**:", 
-            ["🌅 Weg (voor 07:30)", "🚗 Weg (na 07:30)", "🏠 Ik blijf thuis"], 
-            horizontal=True, 
-            key=f"s_{n}"
-        )
+        k = st.radio(f"Status **{n}**:", ["🌅 Weg (voor 07:30)", "🚗 Weg (na 07:30)", "🏠 Ik blijf thuis"], horizontal=True, key=f"s_{n}")
         if "Weg" in k:
             reizigers.append(n)
-            # Check of het een vroege vogel is
-            if "voor 07:30" in k: 
-                vroege_vogels.append(n)
+            if "voor 07:30" in k: vroege_vogels.append(n)
 
     st.divider()
-    msg = "🌧️ Regen: 2 pnt" if weer_bonus else "☀️ Droog: 1 pnt"
-    st.info(msg)
+    p_beurt = 2 if weer_bonus else 1
+    st.info(f"{'🌧️ Regen' if weer_bonus else '☀️ Droog'}: deze beurt is {p_beurt} punt(en).")
 
-    if st.button("⚖️ Bereken & Update"):
-        if not reizigers:
-            st.warning("Niemand weg!")
-        else:
-            kand = [n for n in reizigers if n not in vroege_vogels]
-            if not kand: kand = reizigers
-            
-            k_df = df[df["Naam"].isin(kand)]
-            min_p = k_df["Punten"].min()
-            sjaak_naam = random.choice(k_df[k_df["Punten"] == min_p]["Naam"].tolist())
-            p = 2 if weer_bonus else 1
-            
-            with st.spinner('Bezig...'):
-                res = requests.get(f"{conf['script_url']}?naam={sjaak_naam}&punten={p}")
-                
-            if res.status_code == 200:
-                st.session_state.sjaak, st.session_state.p = sjaak_naam, p
-                st.balloons()
-                st.rerun()
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("⚖️ Bereken & Update", use_container_width=True):
+            if not reizigers:
+                st.warning("Niemand weg!")
             else:
-                st.error("Sheet update mislukt.")
+                kand = [n for n in reizigers if n not in vroege_vogels]
+                if not kand: kand = reizigers
+                k_df = df[df["Naam"].isin(kand)]
+                min_p = k_df["Punten"].min()
+                sjaak = random.choice(k_df[k_df["Punten"] == min_p]["Naam"].tolist())
+                
+                with st.spinner('Updaten...'):
+                    res = requests.get(f"{conf['script_url']}?naam={sjaak}&punten={p_beurt}")
+                if res.status_code == 200:
+                    st.session_state.sjaak, st.session_state.p = sjaak, p_beurt
+                    st.rerun()
+
+    with col2:
+        # Vrijwillige wissel optie
+        vrijwilliger = st.selectbox("Vrijwillige wissel?", ["Kies naam..."] + df["Naam"].tolist())
+        if vrijwilliger != "Kies naam...":
+            if st.button(f"Bevestig {vrijwilliger}", use_container_width=True):
+                with st.spinner('Verwerken...'):
+                    res = requests.get(f"{conf['script_url']}?naam={vrijwilliger}&punten=1")
+                if res.status_code == 200:
+                    st.success(f"{vrijwilliger} heeft de auto verplaatst!")
+                    st.rerun()
 
     if 'sjaak' in st.session_state:
         st.error(f"❌ **{st.session_state.sjaak}** parkeert ver weg! (+{st.session_state.p} pnt)")
+        st.warning("🔑 Wissel sleutels uit of haal de auto morgenochtend op.")
 
 except Exception as e:
     st.error(f"Fout: {e}")
