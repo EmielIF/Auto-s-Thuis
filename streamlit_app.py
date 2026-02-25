@@ -35,7 +35,7 @@ try:
     # Alleen als je weg gaat, kun je een vroege vogel zijn
     vroege_vogels = []
     if reizigers:
-        vroege_vogels = st.multiselect("Wie van hen moet er vóór 08:30 weg?", reizigers)
+        vroege_vogels = st.multiselect("Wie van hen moet er vóór 07:30 weg?", reizigers)
     
     if is_het_slecht_weer:
         st.warning("🌧️ Weer-update: Het regent/sneeuwt. Bonuspunten (2) actief!")
