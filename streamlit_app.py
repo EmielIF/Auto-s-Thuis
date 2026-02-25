@@ -33,14 +33,12 @@ try:
         k = st.radio(f"Status **{n}**:", ["🌅 Weg (voor 07:30)", "🚗 Weg (na 07:30)", "🏠 Ik blijf thuis"], horizontal=True, key=f"s_{n}")
         if "Weg" in k:
             reizigers.append(n)
-            if "voor 07:30" in k: vroege_vogels.append(n)
+            if "voor 07:30" in k:
+                vroege_vogels.append(n)
 
     st.divider()
     p_beurt = 2 if weer_bonus else 1
-    
-    # Check voor enkelvoud of meervoud
     woord = "punten" if p_beurt > 1 else "punt"
-    
     weer_tekst = "🌧️ Regen" if weer_bonus else "☀️ Droog"
     st.info(f"{weer_tekst}: deze beurt is {p_beurt} {woord}.")
 
@@ -52,7 +50,8 @@ try:
                 st.warning("Niemand weg!")
             else:
                 kand = [n for n in reizigers if n not in vroege_vogels]
-                if not kand: kand = reizigers
+                if not kand:
+                    kand = reizigers
                 k_df = df[df["Naam"].isin(kand)]
                 min_p = k_df["Punten"].min()
                 sjaak = random.choice(k_df[k_df["Punten"] == min_p]["Naam"].tolist())
@@ -64,16 +63,14 @@ try:
                     st.rerun()
 
     with col2:
-        # Tekstuele aanpassing om 'misbruik' te ontmoedigen
         vrijwilliger = st.selectbox("Nu de auto verplaatsen?", ["Kies naam..."] + df["Naam"].tolist())
         if vrijwilliger != "Kies naam...":
-            st.caption("Alleen gebruiken als de auto van de oprit naar de straat gaat.")
             if st.button(f"Bevestig verplaatsing {vrijwilliger}", use_container_width=True):
                 with st.spinner('Verwerken...'):
-                    # 0.5 punt is een mooie tussenweg
+                    # 0.5 punt bonus
                     res = requests.get(f"{conf['script_url']}?naam={vrijwilliger}&punten=0.5")
                 if res.status_code == 200:
-                    st.success(f"Top! {vrijwilliger} krijgt 0.5 punt voor de moeite.")
+                    st.success(f"Top! {vrijwilliger} krijgt 0.5 punt.")
                     st.rerun()
 
     if 'sjaak' in st.session_state:
