@@ -69,9 +69,9 @@ try:
         if vrijwilliger != "Kies naam...":
             if st.button(f"Bevestig {vrijwilliger}", use_container_width=True):
                 with st.spinner('Verwerken...'):
-                    res = requests.get(f"{conf['script_url']}?naam={vrijwilliger}&punten=1")
+                    res = requests.get(f"{conf['script_url']}?naam={vrijwilliger}&punten=0.5")
                 if res.status_code == 200:
-                    st.success(f"{vrijwilliger} heeft de auto verplaatst!")
+                    st.success(f"{vrijwilliger} heeft de auto verplaatst en spaart een halve punt!")
                     st.rerun()
 
     if 'sjaak' in st.session_state:
