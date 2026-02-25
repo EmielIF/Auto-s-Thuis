@@ -1,12 +1,13 @@
+import streamlit as st
+import pandas as pd
+import random
+import requests
+
 # Verander de page_icon naar een emoji of een link naar een plaatje
 st.set_page_config(
     page_title="Parkeer-Planner", 
     page_icon="🅿️"  # Hier kun je een emoji van een parkeerplaats neerzetten
 )
-import streamlit as st
-import pandas as pd
-import random
-import requests
 
 st.set_page_config(page_title="Parkeer-Planner", page_icon="🚗")
 st.title("🚗 Slimme Parkeer-Planner")
