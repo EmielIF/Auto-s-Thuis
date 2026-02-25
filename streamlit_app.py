@@ -71,7 +71,6 @@ try:
 
     if 'sjaak' in st.session_state:
         st.error(f"❌ **{st.session_state.sjaak}** parkeert ver weg! (+{st.session_state.p} pnt)")
-        st.info("⚠️ Vergeet niet de auto van de vorige sjaak op te halen!")
 
 except Exception as e:
     st.error(f"Fout: {e}")
