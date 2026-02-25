@@ -29,53 +29,44 @@ try:
     st.subheader("📊 Huidige Stand")
     st.dataframe(df, use_container_width=True, hide_index=True)
 
-    # Vragen wie er weg gaat
+    # Namenlijst uit de sheet halen
+    alle_namen = df["Naam"].tolist()
+
+    # --- INPUT MET CHECKBOXES (GEEN DROPDOWN) ---
     st.subheader("❓ Wie gebruikt de auto?")
-    reizigers = st.multiselect("Wie gaan er morgen met de auto op pad?", df["Naam"].tolist())
+    reizigers = []
+    col1, col2, col3 = st.columns(3)
     
+    # Maak vinkjes voor wie er weg gaat
+    with col1:
+        if st.checkbox("Emiel", key="weg_emiel"): reizigers.append("Emiel")
+    with col2:
+        if st.checkbox("Anouk", key="weg_anouk"): reizigers.append("Anouk")
+    with col3:
+        if st.checkbox("Mama", key="weg_mama"): reizigers.append("Mama")
+
     vroege_vogels = []
     if reizigers:
-        vroege_vogels = st.multiselect("Wie van hen moet er vóór 08:30 weg?", reizigers)
+        st.subheader("🌅 Wie moet er vóór 08:30 weg?")
+        # Alleen vinkjes laten zien voor de mensen die ook echt weg gaan
+        vroeg_cols = st.columns(len(reizigers))
+        for i, naam in enumerate(reizigers):
+            with vroeg_cols[i]:
+                if st.checkbox(naam, key=f"vroeg_{naam}"):
+                    vroege_vogels.append(naam)
     
+    st.divider()
+
     if is_het_slecht_weer:
         st.warning("🌧️ Weer-update: Het regent/sneeuwt. Bonuspunten (2) actief!")
     else:
         st.info("☀️ Weer-update: Het is droog. Normale punten (1) actief.")
 
-    # HIER GING HET MIS MET DE UITLIJNING:
+    # --- BEREKENING ---
     if st.button("⚖️ Bereken & Update"):
         kandidaten = [n for n in reizigers if n not in vroege_vogels]
         
         if not reizigers:
             st.warning("Niemand gaat weg? Dan hoeft er ook niemand te verplaatsen!")
         else:
-            if not kandidaten:
-                st.info("Iedereen die weg gaat is een vroege vogel. We loten uit de reizigers.")
-                sjaak = random.choice(reizigers)
-            else:
-                kandidaat_df = df[df["Naam"].isin(kandidaten)]
-                min_pnt = kandidaat_df["Punten"].min()
-                potentiële_sjaaks = kandidaat_df[kandidaat_df["Punten"] == min_pnt]["Naam"].tolist()
-                sjaak = random.choice(potentiële_sjaaks)
-
-            pnt_erbij = 2 if is_het_slecht_weer else 1
-            
-            with st.spinner('Update versturen naar Google Sheets...'):
-                response = requests.get(f"{script_url}?naam={sjaak}&punten={pnt_erbij}")
-                
-            if response.status_code == 200:
-                st.session_state.laatste_sjaak = sjaak
-                st.session_state.laatste_punten = pnt_erbij
-                st.success(f"De punten zijn bijgewerkt voor {sjaak}!")
-                st.balloons()
-                st.rerun()
-            else:
-                st.error("Update mislukt. Controleer je Google Script URL.")
-
-    # Laat de uitslag zien na de verversing
-    if 'laatste_sjaak' in st.session_state:
-        st.divider()
-        st.error(f"❌ **{st.session_state.laatste_sjaak}** moet ver weg parkeren! (+{st.session_state.laatste_punten} pnt)")
-
-except Exception as e:
-    st.error(f"Fout: {e}")
+            if
