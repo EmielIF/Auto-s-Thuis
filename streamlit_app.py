@@ -26,11 +26,11 @@ try:
     st.subheader("📊 Stand")
     st.dataframe(df, use_container_width=True, hide_index=True)
 
-    st.subheader("📋 Planning")
+    st.subheader("📋 Planning morgen")
     reizigers, vroege_vogels = [], []
     
     for n in df["Naam"].tolist():
-        k = st.radio(f"Status **{n}**:", ["🏠 Thuis", "🚗 Weg (> 07:30)", "🌅 Weg (< 07:30)"], horizontal=True, key=f"s_{n}")
+        k = st.radio(f"Status **{n}**:", ["🏠 Thuis", "🚗 Weg (na 07:30)", "🌅 Weg (voor 07:30)"], horizontal=True, key=f"s_{n}")
         if "Weg" in k:
             reizigers.append(n)
             if "< 07:30" in k: vroege_vogels.append(n)
