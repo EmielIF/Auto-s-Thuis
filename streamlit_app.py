@@ -24,7 +24,18 @@ csv_url = conf["spreadsheet"].replace("/edit?usp=sharing", "/export?format=csv")
 try:
     df = pd.read_csv(csv_url)
     st.subheader("📊 Relatieve Stand")
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    # We dwingen hier de kolom 'Punten' om als getal met 1 decimaal getoond te worden
+    st.dataframe(
+        df, 
+        use_container_width=True, 
+        hide_index=True,
+        column_config={
+            "Punten": st.column_config.NumberColumn(
+                "Punten",
+                format="%.1f",  # Dit zorgt voor 1 cijfer achter de komma en rechts uitlijnen
+            )
+        }
+    )
 
     st.subheader("📋 Planning morgen")
     reizigers, vroege_vogels = [], []
