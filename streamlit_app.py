@@ -42,7 +42,7 @@ try:
         column_config={
             "Punten": st.column_config.NumberColumn(
                 "Punten",
-                format="%.1f", # Toon altijd 1 cijfer achter de komma
+                format="%g",  # %g haalt de .0 weg bij hele getallen, maar laat 0.5 staan
             )
         }
     )
